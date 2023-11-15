@@ -18,10 +18,12 @@ void usage (char *);
 struct jumper initJumper (void);
 void printJumper (struct jumper);
 
+int jollyDifference (int, int);
 bool isJolly (struct jumper);
 
 int main(int argc, char *argv[]) {
 
+  /*-------------------------------FILE INITIALIZATION START-----------------------------*/
   // File Initialization
   if (argc != 2) usage (argv[0]);
 
@@ -32,23 +34,30 @@ int main(int argc, char *argv[]) {
   else {
     fprintf (stderr, "%s opened for reading.\n" , argv[1]);
   }
-
+  /*-------------------------------FILE INITIALIZATION END--------------------------------*/
+  
   /*--------------------------------MAIN PROGRAM START------------------------------------*/
   // Get first jumper
   struct jumper jumper1 = initJumper();
   printJumper (jumper1);
   printf ("\n");
 
-  // Determine if jumper is "Jolly"
-  
+  // Determine if jumper is "Jolly" and print result
+  if (isJolly (jumper1)) {
+    printf ("Jolly\n");
+  }
+  else {
+    printf ("Not jolly\n");
+  }
 
   
 
   /*--------------------------------MAIN PROGRAM END--------------------------------------*/
 
-
+  /*--------------------------------FILE CLEANUP START------------------------------------*/
   fclose (gInputFile);
-
+  /*--------------------------------FILE CLEANUP END--------------------------------------*/
+  
   return 0;
 }
 
@@ -88,12 +97,32 @@ void printJumper (struct jumper j) {
   printf ("\n");
 }
 
-bool isJolly (struct jumper j) {
-  bool isJolly = false;
-  int jollyTable [kgMaxSequenceLength]; // 1 for jollyEntry, 0 for notJollyEntry
-  jollyTable[0] = 1;
-  for (int i = 0; i < kgMaxSequenceLength; i++) {
-    jollyTable [i] = 1;
+int jollyDifference (int f, int s) {
+  int t = s - f;
+  if (t < 0) { 
+    t *= -1;
   }
-  return false;
+  return t;
+}
+
+bool isJolly (struct jumper j) {
+  bool jollyTable [kgMaxSequenceLength]; // 1 for jollyEntry, 0 for notJollyEntry
+  jollyTable[0] = true; // Not used
+  // jollyTable { true, flase, false, false, ..., false }
+  
+  // false when either (difference > n - 1) OR (jollyTable[difference] true * 2)
+  for (int i = 0; i < j.length; i++) {
+    if (jollyTable[jollyDifference(i, i + 1)] == true) { // Repeated difference
+      return false;
+    }
+    else if (jollyDifference(i, i + 1) > j.length) { // Difference is too big
+      return false;
+    }
+    else if (jollyDifference(i, i + 1) <= 0) { // Difference is too small
+      return false;
+    }
+    else (jollyTable[i] = true); // Difference is okay
+  }
+  
+  return true;
 }
