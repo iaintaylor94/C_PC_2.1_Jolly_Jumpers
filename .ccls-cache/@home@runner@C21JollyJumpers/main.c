@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <sys/errno.h>
 
+#define DEBUG 1
+
 struct jumper {
 int sequence [3000];
 int length;
@@ -18,7 +20,9 @@ void usage (char *);
 struct jumper initJumper (void);
 void printJumper (struct jumper);
 
+void initializeJollyArray(bool [], int);
 int jollyDifference (int, int);
+void printJollyarray (bool[], int);
 bool isJolly (struct jumper);
 
 int main(int argc, char *argv[]) {
@@ -27,6 +31,8 @@ int main(int argc, char *argv[]) {
   // File Initialization
   if (argc != 2) usage (argv[0]);
 
+  #ifdef DEBUG 
+  
   if (NULL == (gInputFile = fopen(argv[1], "r"))) {
     fprintf (stderr, "inputFile: %s: %s\n", argv[1], strerror(errno));
     exit (EXIT_FAILURE);
@@ -34,6 +40,9 @@ int main(int argc, char *argv[]) {
   else {
     fprintf (stderr, "%s opened for reading.\n" , argv[1]);
   }
+
+  #endif
+  
   /*-------------------------------FILE INITIALIZATION END--------------------------------*/
   
   /*--------------------------------MAIN PROGRAM START------------------------------------*/
@@ -50,6 +59,20 @@ int main(int argc, char *argv[]) {
     printf ("Not jolly\n");
   }
 
+  struct jumper jumper2 = initJumper();
+  printJumper (jumper2);
+  printf ("\n");
+
+  // Determine if jumper is "Jolly" and print result
+  if (isJolly (jumper2)) {
+    printf ("Jolly\n");
+  }
+  else {
+    printf ("Not jolly\n");
+  }
+
+
+  
   
 
   /*--------------------------------MAIN PROGRAM END--------------------------------------*/
@@ -68,9 +91,10 @@ void usage (char *cmd) {
 
 // Jumper Functions
 struct jumper initJumper (void) {
-  struct jumper temp; // { int length; int sequence [3000] }
+  struct jumper temp;
   
   char input [kgMaxSequenceLength];
+  void *end;
   fgets (input, kgMaxSequenceLength, gInputFile);
   for (int i = 0; i < kgMaxSequenceLength; i++) {
     if (input[i] == '\n') {
@@ -84,6 +108,7 @@ struct jumper initJumper (void) {
     temp.sequence [i] = atoi(strtok(NULL, " "));
   }
 
+  
   return temp;
 }
 
@@ -105,24 +130,50 @@ int jollyDifference (int f, int s) {
   return t;
 }
 
-bool isJolly (struct jumper j) {
-  bool jollyTable [kgMaxSequenceLength]; // 1 for jollyEntry, 0 for notJollyEntry
-  jollyTable[0] = true; // Not used
-  // jollyTable { true, flase, false, false, ..., false }
-  
-  // false when either (difference > n - 1) OR (jollyTable[difference] true * 2)
-  for (int i = 0; i < j.length; i++) {
-    if (jollyTable[jollyDifference(i, i + 1)] == true) { // Repeated difference
-      return false;
-    }
-    else if (jollyDifference(i, i + 1) > j.length) { // Difference is too big
-      return false;
-    }
-    else if (jollyDifference(i, i + 1) <= 0) { // Difference is too small
-      return false;
-    }
-    else (jollyTable[i] = true); // Difference is okay
+void printJollyarray (bool a[], int length) {
+  printf ("Jolly Array { ");
+  for (int i = 0; i < length; i++) {
+    printf ("%d ", a[i]);
   }
+  printf ("}\n");
+}
+
+void initializeJollyArray (bool table[], int length) {
+  table [0] = true;
+  for (int i = 1; i < length; i++) {
+    table [i] = false;
+  }
+}
+
+bool isJolly (struct jumper j) {
+  bool jollyArray [j.length]; // 1 for jollyEntry, 0 for notJollyEntry
+  initializeJollyArray(jollyArray, j.length); // { 1, 0, 0, 0 }
+  printJollyarray(jollyArray, j.length);
+  
+  // false when either (difference == 0) OR (difference > n - 1) OR (jollyArray[difference] true twice)
+  for (int i = 0; i < j.length - 1; i++) {
+    printf ("Jolly Difference %d\n", jollyDifference(j.sequence[i], j.sequence[i + 1]));
+
+    if (jollyDifference(j.sequence[i], j.sequence[i + 1]) == 0) {
+      printf ("Jolly Difference == 0\n");
+      return false;
+    }
+    else if (jollyDifference(j.sequence[i], j.sequence[i + 1]) > j.length) {
+      printf ("Jolly Difference > n\n");
+      return false;
+    }
+    else if (jollyArray[jollyDifference(j.sequence[i], j.sequence[i + 1])] == true) {
+      printf ("jollyArray true twice\n");
+      return false;
+    }
+    else {
+      jollyArray[jollyDifference(j.sequence[i], j.sequence[i + 1])] = true;
+    }
+
+  }
+
+  // Print jolly array
+  printJollyarray(jollyArray, j.length);
   
   return true;
 }
