@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <sys/errno.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 struct jumper {
 int sequence [3000];
@@ -30,49 +30,35 @@ int main(int argc, char *argv[]) {
   /*-------------------------------FILE INITIALIZATION START-----------------------------*/
   // File Initialization
   if (argc != 2) usage (argv[0]);
-
-  #ifdef DEBUG 
   
   if (NULL == (gInputFile = fopen(argv[1], "r"))) {
     fprintf (stderr, "inputFile: %s: %s\n", argv[1], strerror(errno));
     exit (EXIT_FAILURE);
   }
   else {
-    fprintf (stderr, "%s opened for reading.\n" , argv[1]);
+//    fprintf (stderr, "%s opened for reading.\n" , argv[1]);
   }
-
-  #endif
   
   /*-------------------------------FILE INITIALIZATION END--------------------------------*/
   
   /*--------------------------------MAIN PROGRAM START------------------------------------*/
-  // Get first jumper
-  struct jumper jumper1 = initJumper();
-  printJumper (jumper1);
-  printf ("\n");
 
-  // Determine if jumper is "Jolly" and print result
-  if (isJolly (jumper1)) {
-    printf ("Jolly\n");
+  do {
+    struct jumper jollyJumper = initJumper();
+    
+    if (jollyJumper.length == 0) {
+      break;
+    }
+    else {
+      if (isJolly(jollyJumper)) {
+        printf ("Jolly\n");
+      }
+      else {
+        printf ("Not jolly\n");
+      }
+    }
   }
-  else {
-    printf ("Not jolly\n");
-  }
-
-  struct jumper jumper2 = initJumper();
-  printJumper (jumper2);
-  printf ("\n");
-
-  // Determine if jumper is "Jolly" and print result
-  if (isJolly (jumper2)) {
-    printf ("Jolly\n");
-  }
-  else {
-    printf ("Not jolly\n");
-  }
-
-
-  
+    while (true);
   
 
   /*--------------------------------MAIN PROGRAM END--------------------------------------*/
@@ -84,10 +70,12 @@ int main(int argc, char *argv[]) {
   return 0;
 }
 
+#ifdef DEBUG
 void usage (char *cmd) {
   fprintf (stderr, "usage: %s inputFileName\n", cmd);
   exit (EXIT_SUCCESS);
 }
+#endif
 
 // Jumper Functions
 struct jumper initJumper (void) {
@@ -95,7 +83,7 @@ struct jumper initJumper (void) {
   
   char input [kgMaxSequenceLength];
   void *end;
-  fgets (input, kgMaxSequenceLength, gInputFile);
+  end = fgets (input, kgMaxSequenceLength, gInputFile);
   for (int i = 0; i < kgMaxSequenceLength; i++) {
     if (input[i] == '\n') {
       input[i] = '\0';
@@ -106,6 +94,10 @@ struct jumper initJumper (void) {
   temp.length = atoi(strtok(input, " ")); 
   for (int i = 0; i < temp.length; i++) {
     temp.sequence [i] = atoi(strtok(NULL, " "));
+  }
+
+  if (end == NULL) {
+    temp.length = 0;
   }
 
   
@@ -148,22 +140,22 @@ void initializeJollyArray (bool table[], int length) {
 bool isJolly (struct jumper j) {
   bool jollyArray [j.length]; // 1 for jollyEntry, 0 for notJollyEntry
   initializeJollyArray(jollyArray, j.length); // { 1, 0, 0, 0 }
-  printJollyarray(jollyArray, j.length);
+//  printJollyarray(jollyArray, j.length);
   
   // false when either (difference == 0) OR (difference > n - 1) OR (jollyArray[difference] true twice)
   for (int i = 0; i < j.length - 1; i++) {
-    printf ("Jolly Difference %d\n", jollyDifference(j.sequence[i], j.sequence[i + 1]));
+//    printf ("Jolly Difference %d\n", jollyDifference(j.sequence[i], j.sequence[i + 1]));
 
     if (jollyDifference(j.sequence[i], j.sequence[i + 1]) == 0) {
-      printf ("Jolly Difference == 0\n");
+//      printf ("Jolly Difference == 0\n");
       return false;
     }
     else if (jollyDifference(j.sequence[i], j.sequence[i + 1]) > j.length) {
-      printf ("Jolly Difference > n\n");
+//      printf ("Jolly Difference > n\n");
       return false;
     }
     else if (jollyArray[jollyDifference(j.sequence[i], j.sequence[i + 1])] == true) {
-      printf ("jollyArray true twice\n");
+//      printf ("jollyArray true twice\n");
       return false;
     }
     else {
@@ -173,7 +165,7 @@ bool isJolly (struct jumper j) {
   }
 
   // Print jolly array
-  printJollyarray(jollyArray, j.length);
+//  printJollyarray(jollyArray, j.length);
   
   return true;
 }
